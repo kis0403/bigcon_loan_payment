@@ -10,11 +10,11 @@ data_set=fread("challenge_data\\Data_set.csv",stringsAsFactors = T)
 
 
 ##factor type data
-levels(as.factor(data_set$LT1Y_PEOD_RATE))           #최근1년보험료연체율 0,10미만,...,90미만,90이상
-levels(as.factor(data_set$AGE))                      #나이정보 *,20,25,...,65,70
-levels(as.factor(data_set$SEX))                      #성별정보 *,1,2
-levels(as.factor(data_set$TEL_MBSP_GRAD))            #멤버쉽등급 "","E","Q","R","W"
-levels(as.factor(data_set$PAYM_METD))                #납부방법 "","G","K","O","R"
+levels(data_set$LT1Y_PEOD_RATE)           #최근1년보험료연체율 0,10미만,...,90미만,90이상
+levels(data_set$AGE)                      #나이정보 *,20,25,...,65,70
+levels(data_set$SEX)                      #성별정보 *,1,2
+levels(data_set$TEL_MBSP_GRAD)            #멤버쉽등급 "","E","Q","R","W"
+levels(data_set$PAYM_METD)                #납부방법 "","G","K","O","R"
 
 
 ##data type check
