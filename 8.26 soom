@@ -1,0 +1,129 @@
+#파생변수 만들기
+#1. 상환율 repay1
+bigcon$repay = bigcon$TOT_REPY_AMT / bigcon$TOT_CRLN_AMT #F1 0.099   / NA가 많아서 그런것이 아닌가
+
+bigcon$repay[is.nan(bigcon$repay)] <- "*"
+bigcon$repay1 = ifelse(bigcon$repay<0.1, "10",ifelse(bigcon$repay >= 0.1&bigcon$repay < 0.2, "20",
+                                                    ifelse(bigcon$repay >= 0.2&bigcon$repay < 0.3, "30",
+                                                           ifelse(bigcon$repay >= 0.3&bigcon$repay < 0.40, "40",
+                                                                  ifelse(bigcon$repay >= 0.4&bigcon$repay < 0.50, "50",
+                                                                         ifelse(bigcon$repay >= 0.50&bigcon$repay < 0.60, "60",
+                                                                                ifelse(bigcon$repay >= 0.60&bigcon$repay < 0.70, "70",
+                                                                                       ifelse(bigcon$repay >= 0.70&bigcon$repay < 0.80, "80",
+                                                                                              ifelse(bigcon$repay >= 0.80&bigcon$repay < 0.90, "90",
+                                                                                                     ifelse(bigcon$repay >= 0.9&bigcon$repay <= 1.0, "100","*"
+                                                                                                        
+                                                     ))))))))))
+bigcon$repay1[is.na(bigcon$repay1)] <- "*"
+
+  ##범주화 할경우 logistic F1 0.403
+
+
+
+#2. 월 가용금액 AVAIL_AMOUNT (추정소득/12 = 월급 - [월납입보험료+통신요금]) #F1 동일
+bigcon$CUST_JOB_INCM_MON = bigcon$CUST_JOB_INCM / 12 #추정월급 CUST_JOB_INCM_MON
+bigcon$HSHD_INFR_INCM_MON = bigcon$HSHD_INFR_INCM / 12 #가구합산 추정소득 HSHD_INFR_INCM
+
+colnames(bigcon)[40:43] #납입보험료
+
+summary(bigcon$MON_TLFE_AMT) #통신요금
+
+bigcon$PAY_MON= (bigcon$MON_TLFE_AMT + bigcon[,40]+bigcon[,41]+bigcon[,42]+bigcon[,43])/10000 #PAY_MON 월 예상 고정지출
+
+bigcon$AVAIL_AMOUNT = bigcon$CUST_JOB_INCM_MON - bigcon$PAY_MON
+
+bigcon$AVAIL_AMOUNT_FAM = bigcon$HSHD_INFR_INCM_MON - bigcon$PAY_MON
+bigcon$AVAIL_AMOUNT_FAM1 = bigcon$AVAIL_AMOUNT_FAM
+bigcon$AVAIL_AMOUNT_FAM1[which(bigcon$AVAIL_AMOUNT_FAM1 < 0)] = 0
+
+
+######################
+##7:3 train/valid
+dim(bigcon)
+str(bigcon)
+bigcon = bigcon[,-c(71,72)]
+
+set.seed(826) #reproducability setting
+intrain<-createDataPartition(y=bigcon$TARGET, p=0.7, list=FALSE) 
+train<-bigcon[intrain,-c(1)]
+valid<-bigcon[-intrain,-c(1)]
+
+
+
+
+
+
+#3. svm   /  F1 0.33
+library(e1071)
+library(kernlab)
+
+model_svm <- svm(TARGET~.,data=train)
+pred_svm <- predict(model_svm, valid)
+svm_bool <- ifelse(pred_svm>0.02,0,1)
+svm_conf <- confusionMatrix(actual_target,svm_bool) 
+
+quantile(pred_svm,0.96)
+
+
+
+#4. naive bayes    / F1 0.05 , 0.23
+model_naive <- naiveBayes(TARGET~.,data=train)
+pred_naive <- predict(model_naive,valid,type="raw")
+
+naive_bool<-ifelse(pred_naive>.2,0,1)
+naive_conf <- confusionMatrix(actual_target2, naive_bool[,2]) #column1 0.05, column2 0.23
+naive_conf$byClass
+
+
+
+#5. gbm  / F1 0.467
+library(gbm)
+
+gbm_train=gbm(TARGET~.,data=train,distribution = "bernoulli",n.trees=350,shrinkage = 0.05,interaction.depth = 10,verbose = T)  
+n.tree=gbm.perf(gbm_train,method="OOB")  
+n.tree
+gbm.pred=predict(gbm_train,valid,n.trees=350,num.threads=2)  
+gbm_bool<-ifelse(gbm.pred>-1.6,0,1)  
+gbm_conf<-confusionMatrix(actual_target,gbm_bool)  
+gbm_conf$byClass
+
+
+bigcon$repay1 <- as.factor(bigcon$repay1) 
+
+
+#6. rf  / 0.449
+rf_train=ranger(TARGET~.,data=train,num.trees=500,mtry=4)
+rf_pred=predict(rf_train,valid)
+
+rf_bool<-ifelse(rf_pred$predictions>0.18,0,1)
+
+rf_conf<-confusionMatrix(actual_target,rf_bool)
+rf_conf$byClass
+
+
+
+
+
+##logistic reg
+logis_train=glm(TARGET~.,data=train,family=binomial)
+logis_pred=predict.glm(logis_train,newdata = valid,type="response")
+
+logis_bool<-ifelse(logis_pred>0.16,0,1)
+actual_target=1-as.numeric(valid$TARGET)
+
+logis_conf<-confusionMatrix(actual_target,logis_bool)
+logis_conf$byClass                                              #F1 0.40612468
+
+##D tree
+tree_train=rpart(TARGET~.,data=train)
+tree_pred<-predict(tree_train,newdata=valid,type="vector")
+
+tree_bool<-ifelse(tree_pred>.13,0,1)
+
+tree_conf<-confusionMatrix(actual_target,tree_bool)
+tree_conf$byClass                                               #F1 0.33678441
+
+
+
+
+
