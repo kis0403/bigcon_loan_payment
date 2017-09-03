@@ -1,4 +1,7 @@
-.######################################################################
+data_set = read.csv('/home/snu/Bigcontest/challenge_data/Data_set.csv',fileEncoding='euc-kr',stringsAsFactors = TRUE)
+
+######################################################################
+######################################################################
 # ratio_LNIF는 전체 금액을 전체 건수로 나눈 비율
 data_set$ratio_LNIF =data_set$TOT_LNIF_AMT/(data_set$BNK_LNIF_CNT+data_set$CPT_LNIF_CNT+data_set$SPART_LNIF_CNT+data_set$ECT_LNIF_CNT)
 data_set$ratio_LNIF = ifelse(is.infinite(data_set$ratio_LNIF),997001,data_set$ratio_LNIF)
