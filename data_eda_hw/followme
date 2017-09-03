@@ -1,0 +1,75 @@
+.######################################################################
+# ratio_LNIF는 전체 금액을 전체 건수로 나눈 비율
+data_set$ratio_LNIF =data_set$TOT_LNIF_AMT/(data_set$BNK_LNIF_CNT+data_set$CPT_LNIF_CNT+data_set$SPART_LNIF_CNT+data_set$ECT_LNIF_CNT)
+data_set$ratio_LNIF = ifelse(is.infinite(data_set$ratio_LNIF),997001,data_set$ratio_LNIF)
+######################################################################
+
+
+######################################################################
+# ratio_CLIF_d_LNIF
+data_set$ratio_CLIF_d_LNIF =data_set$TOT_CLIF_AMT/data_set$TOT_LNIF_AMT
+######################################################################
+
+######################################################################
+# ratio_BNK_d_LNIF
+data_set$ratio_BNK_d_LNIF =data_set$BNK_LNIF_AMT/data_set$TOT_LNIF_AMT
+######################################################################
+
+######################################################################
+# ratio_CPT_d_LNIF
+data_set$ratio_CPT_d_LNIF =data_set$CPT_LNIF_AMT/data_set$TOT_LNIF_AMT
+######################################################################
+
+######################################################################
+# ratio_BNK_d_N
+data_set$ratio_BNK_d_N =data_set$BNK_LNIF_AMT/data_set$BNK_LNIF_CNT
+data_set$ratio_BNK_d_N = ifelse(is.nan(data_set$ratio_BNK_d_N),0,data_set$ratio_BNK_d_N)
+######################################################################
+
+######################################################################
+# ratio_CPT_d_N
+data_set$ratio_CPT_d_N =data_set$CPT_LNIF_AMT/data_set$CPT_LNIF_CNT
+data_set$ratio_CPT_d_N <- ifelse(is.nan(data_set$ratio_CPT_d_N),0,data_set$ratio_CPT_d_N)
+######################################################################
+
+######################################################################
+# 제1 제2금융권 제외
+data_set$except_BNK_CPT <- ifelse((data_set$SPART_LNIF_CNT+data_set$ECT_LNIF_CNT)!=0,1,0)
+table(data_set$TARGET,data_set$except_BNK_CPT)
+prop.table(table(data_set$TARGET,data_set$except_BNK_CPT),2)
+######################################################################
+
+######################################################################
+# 전체 대출 횟수
+data_set$all_loan <- data_set$BNK_LNIF_CNT+data_set$CPT_LNIF_CNT+data_set$SPART_LNIF_CNT+data_set$ECT_LNIF_CNT
+######################################################################
+
+######################################################################
+# 은행대출 / 전체 대출 횟수
+data_set$BNK_d_all_loan <- data_set$BNK_LNIF_CNT/data_set$all_loan
+data_set$BNK_d_all_loan <- ifelse(is.nan(data_set$BNK_d_all_loan),0,data_set$BNK_d_all_loan)
+######################################################################
+
+######################################################################
+# 카드사/할부사/캐피탈 / 전체 대출 횟수
+data_set$CPT_d_all_loan <- data_set$CPT_LNIF_CNT/data_set$all_loan
+data_set$CPT_d_all_loan <- ifelse(is.nan(data_set$CPT_d_all_loan),0,data_set$CPT_d_all_loan)
+prop.table(table(data_set$TARGET,data_set$CPT_d_all_loan+data_set$BNK_d_all_loan<1),1)
+######################################################################
+
+######################################################################
+# [2산업분류]/ 전체 대출 횟수
+data_set$SPART_d_all_loan <- data_set$SPART_LNIF_CNT/data_set$all_loan
+data_set$SPART_d_all_loan <- ifelse(is.nan(data_set$SPART_d_all_loan),0,data_set$SPART_d_all_loan)
+prop.table(table(data_set$TARGET,data_set$SPART_d_all_loan>0.5),1)
+######################################################################
+
+######################################################################
+# 은행, 카드사/할부사/캐피탈 제외 대출금액
+data_set$except_loan <-data_set$TOT_LNIF_AMT-data_set$BNK_LNIF_AMT-data_set$CPT_LNIF_AMT
+table(data_set$except_loan)
+data_set$except_loan <- ifelse(data_set$except_loan<0,0,data_set$except_loan)
+prop.table(table(data_set$TARGET,data_set$except_loan==0),1)
+######################################################################
+
+
