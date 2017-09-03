@@ -246,8 +246,18 @@ today_data$ratio_CLIF_d_LNIF <- today_data$ratio_CLIF_d_LNIF>0.5
 
 ######################################################################
 
+########################################################################
+#대출형태	0:신용대출을 받지 않음, 1: 신용대출만 받음. 2:신용대출이 50%초과, 3. 신용대출이 50%이한
 
+data_set$loan_type <- data_set$ratio_BNK_d_LNIF
+data_set$loan_type[which(data_set$ratio_BNK_d_LNIF>0.5 &  data_set$ratio_BNK_d_LNIF!=1)] <- 2
+data_set$loan_type[(data_set$ratio_BNK_d_LNIF<=0.5 & data_set$ratio_BNK_d_LNIF!=0)] <- 3
+#####################################################################
 
+##########################################################################
+추정소득 / 가족원수
+data_set$perincome <- data_set$HSHD_INFR_INCM/data_set$ACTL_FMLY_NUM
+###########################################################################
 
 summary_mat <- c()
 d <- c()
