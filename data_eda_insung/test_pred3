@@ -1,0 +1,61 @@
+library(caret)       #preprocess,eval
+library(rpart)       #rf
+library(ranger)      #rf
+library(foreach)     #parallel
+library(data.table)  #data loading
+library(ggplot2)     #data EDA
+library(gbm)         #GBM
+library(unbalanced)  #data sampling
+
+
+#setwd("C:\\Users\\lifebloom\\Desktop\\loan payment")
+setwd("C:\\Users\\kis\\Desktop\\lib")
+
+data_set=fread("challenge_data\\Data_set.csv",stringsAsFactors = T)
+#data_set<-cbind(data_set[,c(rep(1:2))],data_set[,c(rep(3:6))])
+##############################
+# SMOTE
+# train$TARGET=as.factor(train$TARGET)
+# train2=ubSMOTE(train,train$TARGET, perc.over = 300, k = 5, perc.under = 120, verbose = TRUE)
+# train=train2$X
+# train$TARGET=as.numeric(train$TARGET)-1
+# table(train$TARGET)
+##############################
+
+#table(data_set$CRDT_CARD_CNT,data_set$TARGET)/apply(table(data_set$CRDT_CARD_CNT,data_set$TARGET),1,sum)
+##############################
+# factorizing
+# for (i in c(1:69)) {
+#   a=colnames(data_set)[i]
+#   data_set$a<-as.factor(data_set$a)
+# }
+# a
+#############################
+
+
+
+set.seed(1000) #reproducability setting
+intrain<-createDataPartition(y=data_set$TARGET, p=0.7, list=FALSE) 
+#data_set$TARGET<-as.factor(data_set$TARGET)
+train<-data_set[intrain,-c(1)]
+valid<-data_set[-intrain,-c(1)]
+#train<-data_set[intrain,]
+#valid<-data_set[-intrain,]
+
+
+
+gbm_train=gbm(TARGET~.,data=train,distribution = "bernoulli",n.trees=350,shrinkage = 0.05,interaction.depth = 10,verbose = T)
+n.tree=gbm.perf(gbm_train,method="OOB")
+n.tree
+gbm.pred=predict(gbm_train,valid,n.trees=350,num.threads=2)
+
+outcome=data.frame()
+for (i in c(1:100)) {
+  gbm_boolean=ifelse(gbm.pred>2.5-i/20,0,1)
+  actual_target=1-as.numeric(valid$TARGET)
+  gbm_confus<-confusionMatrix(actual_target,gbm_boolean)
+  res=data.frame(cut.off=2.5-i/20,Pre=gbm_confus$byClass[5],Rec=gbm_confus$byClass[6],F1=gbm_confus$byClass[7])
+  outcome=rbind(outcome,res)
+}
+outcome
+
