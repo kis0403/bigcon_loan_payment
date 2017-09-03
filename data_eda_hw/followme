@@ -1,6 +1,8 @@
-data_set = read.csv('/home/snu/Bigcontest/challenge_data/Data_set.csv',fileEncoding='euc-kr',stringsAsFactors = TRUE)
 
-######################################################################
+data_set = read.csv('/home/snu/Bigcontest/challenge_data/Data_set.csv',fileEncoding='euc-kr',stringsAsFactors = TRUE)
+true_set = data_set[data_set$TARGET==1,]
+treu_set = data_set[data_set$TARGET==0,]
+
 ######################################################################
 # ratio_LNIF는 전체 금액을 전체 건수로 나눈 비율
 data_set$ratio_LNIF =data_set$TOT_LNIF_AMT/(data_set$BNK_LNIF_CNT+data_set$CPT_LNIF_CNT+data_set$SPART_LNIF_CNT+data_set$ECT_LNIF_CNT)
@@ -74,5 +76,200 @@ table(data_set$except_loan)
 data_set$except_loan <- ifelse(data_set$except_loan<0,0,data_set$except_loan)
 prop.table(table(data_set$TARGET,data_set$except_loan==0),1)
 ######################################################################
+
+
+
+########################################################################
+prop.table(table(data_set$CRDT_OCCR_MDIF))
+prop.table(table(data_set$TARGET,data_set$CRDT_OCCR_MDIF),1)
+prop.table(table(data_set$TARGET,data_set$SPTCT_OCCR_MDIF),1)
+prop.table(table(data_set$TARGET,data_set$SPTCT_OCCR_MDIF<=13),1)
+
+prop.table(table(data_set$TARGET,data_set$CTCD_OCCR_MDIF),1)
+
+prop.table(table(data_set$TARGET,data_set$CB_GUIF_CNT),1)
+#######################################################################
+
+True_set = data_set[data_set$TARGET==1,]
+False_set = data_set[data_set$TARGET==0,]
+
+
+######################################################################
+# TOT_LNIF_AMT 전체 대출금액
+######################################################################
+mean(data_set$TOT_LNIF_AMT)
+mean(True_set$TOT_LNIF_AMT)
+mean(False_set$TOT_LNIF_AMT)
+
+data_set$TOT_LNIF_AMT_ONE = ifelse(data_set$TOT_LNIF_AMT>2,1,0)
+prop.table(table(data_set$TARGET,data_set$TOT_LNIF_AMT_ONE),1)
+table(data_set$TARGET,data_set$TOT_LNIF_AMT_ONE)
+
+true_tot_lnif <- logspline(prop.table(table(True_set$TOT_LNIF_AMT)))
+false_tot_lnif <- logspline(prop.table(table(False_set$TOT_LNIF_AMT)))
+plot(true_tot_lnif,what='p')
+plot(true_tot_lnif,what='d')
+plot(false_tot_lnif,what='p')
+plot(false_tot_lnif,what='d')
+
+
+plot(prop.table(table(True_set$TOT_LNIF_AMT[which(True_set$TOT_LNIF_AMT!=1)])))
+plot(prop.table(table(False_set$TOT_LNIF_AMT[which(False_set$TOT_LNIF_AMT!=1)])))
+
+prop.table(table(True_set$TOT_LNIF_AMT))
+prop.table(table(False_set$TOT_LNIF_AMT))
+
+# ratio
+ratio_tot_lnif <- logspline(prop.table(table(data_set$ratio_LNIF)))
+plot(prop.table(table(data_set$ratio_LNIF)),s=1)
+plot(prop.table(table(True_set$ratio_LNIF)),xlim=c(0,180001),ylim=c(0,0.1))
+plot(prop.table(table(False_set$ratio_LNIF)),xlim=c(0,180001),ylim=c(0,0.1))
+
+######################################################################
+# TOT_CLIF_AMT액 신용대출금액
+######################################################################
+mean(data_set$TOT_CLIF_AMT)
+mean(True_set$TOT_CLIF_AMT)
+mean(False_set$TOT_CLIF_AMT)
+
+data_set$TOT_CLIF_AMT_ONE = ifelse(data_set$TOT_CLIF_AMT>0,1,0)
+prop.table(table(data_set$TARGET,data_set$TOT_CLIF_AMT_ONE),1)
+
+plot(prop.table(table(True_set$TOT_CLIF_AMT)))
+plot(prop.table(table(False_set$TOT_CLIF_AMT)))
+
+
+true_tot_lnif <- logspline(prop.table(table(True_set$TOT_CLIF_AMT)))
+false_tot_lnif <- logspline(prop.table(table(False_set$TOT_CLIF_AMT)))
+
+
+plot(true_tot_lnif,what='p')
+plot(true_tot_lnif,what='d')
+plot(false_tot_lnif,what='p')
+plot(false_tot_lnif,what='d')
+
+
+plot(prop.table(table(True_set$TOT_CLIF_AMT[which(True_set$TOT_CLIF_AMT!=1)])))
+plot(prop.table(table(False_set$TOT_CLIF_AMT[which(False_set$TOT_CLIF_AMT!=1)])))
+
+prop.table(table(True_set$TOT_CLIF_AMT))
+prop.table(table(False_set$TOT_CLIF_AMT))
+
+# ratio
+plot(prop.table(table(True_set$ratio_CLIF_d_LNIF)))
+plot(prop.table(table(False_set$ratio_CLIF_d_LNIF)))
+plot(ratio_tot_clif)
+
+######################################################################
+# BNK_LNIF_AMT	대출정보 현재 총 금액[은행]
+######################################################################
+mean(data_set$BNK_LNIF_AMT)
+mean(True_set$BNK_LNIF_AMT)
+mean(False_set$BNK_LNIF_AMT)
+
+data_set$BNK_LNIF_AMT_ONE = ifelse(data_set$BNK_LNIF_AMT>=1,1,0)
+table(data_set$TARGET,data_set$BNK_LNIF_AMT_ONE)
+prop.table(table(data_set$TARGET,data_set$BNK_LNIF_AMT_ONE),1)
+table(data_set$TARGET,data_set$BNK_LNIF_AMT_ONE)
+
+plot(prop.table(table(True_set$BNK_LNIF_AMT)))
+plot(prop.table(table(False_set$BNK_LNIF_AMT)))
+
+
+true_tot_lnif <- logspline(prop.table(table(True_set$BNK_LNIF_AMT)))
+false_tot_lnif <- logspline(prop.table(table(False_set$BNK_LNIF_AMT)))
+
+
+plot(true_tot_lnif,what='p')
+plot(true_tot_lnif,what='d')
+plot(false_tot_lnif,what='p')
+plot(false_tot_lnif,what='d')
+
+
+plot(prop.table(table(True_set$BNK_LNIF_AMT[which(True_set$BNK_LNIF_AMT!=1)])))
+plot(prop.table(table(False_set$BNK_LNIF_AMT[which(False_set$BNK_LNIF_AMT!=1)])))
+
+
+prop.table(table(True_set$BNK_LNIF_AMT))
+prop.table(table(False_set$BNK_LNIF_AMT))
+
+# ratio
+plot(prop.table(table(True_set$ratio_BNK_d_LNIF)))
+plot(prop.table(table(False_set$ratio_BNK_d_LNIF)))
+
+prop.table(table(True_set$ratio_BNK_d_LNIF<0.))
+
+
+######################################################################
+
+######################################################################
+# CPT_LNIF_AMT	대출정보 현재 총 금액[카드사/할부사/캐피탈]
+######################################################################
+mean(data_set$CPT_LNIF_AMT)
+mean(True_set$CPT_LNIF_AMT)
+mean(False_set$CPT_LNIF_AMT)
+
+data_set$CPT_LNIF_AMT_ONE = ifelse(data_set$CPT_LNIF_AMT==0,1,0)
+table(data_set$TARGET,data_set$CPT_LNIF_AMT_ONE)
+prop.table(table(data_set$TARGET,data_set$CPT_LNIF_AMT_ONE),1)
+table(data_set$TARGET,data_set$CPT_LNIF_AMT_ONE)
+
+plot(prop.table(table(True_set$CPT_LNIF_AMT)))
+plot(prop.table(table(False_set$CPT_LNIF_AMT)))
+
+
+true_tot_lnif <- logspline(prop.table(table(True_set$CPT_LNIF_AMT)))
+false_tot_lnif <- logspline(prop.table(table(False_set$CPT_LNIF_AMT)))
+
+
+plot(true_tot_lnif,what='p')
+plot(true_tot_lnif,what='d')
+plot(false_tot_lnif,what='p')
+plot(false_tot_lnif,what='d')
+
+
+plot(prop.table(table(True_set$CPT_LNIF_AMT[which(True_set$CPT_LNIF_AMT!=1)])))
+plot(prop.table(table(False_set$CPT_LNIF_AMT[which(False_set$CPT_LNIF_AMT!=1)])))
+
+prop.table(table(True_set$CPT_LNIF_AMT))
+prop.table(table(False_set$CPT_LNIF_AMT))
+
+9# ratio
+plot(prop.table(table(True_set$ratio_CPT_d_LNIF)))
+plot(prop.table(table(False_set$ratio_CPT_d_LNIF)))
+
+prop.table(table(True_set$ratio_CPT_d_LNIF>0.5))
+prop.table(table(False_set$ratio_CPT_d_LNIF>0.5))
+today_data$ratio_CPT_d_LNIF <- today_data$ratio_CPT_d_LNIF>0.5
+today_data$ratio_BNK_d_LNIF <- today_data$ratio_BNK_d_LNIF>0.5
+today_data$ratio_CLIF_d_LNIF <- today_data$ratio_CLIF_d_LNIF>0.5
+
+######################################################################
+
+
+
+
+summary_mat <- c()
+d <- c()
+for(i in 1:length(colnames(data_set))){
+  a <- length(unique(data_set[,i]))
+  e <- sum(data_set[,i]==0)
+  g <- sum(data_set[,i]=='*')
+  f <- sum(data_set[,i]=='NULL')
+  k <- sum(data_set[,i]=='NA')
+  l <- sum(data_set[,i]=='NAN')
+  c <- c(a,e,g,f,k,l)
+  
+  if(length(d)==0){
+    d <- c
+  }else{
+    d <- rbind(d,c)
+  }
+}
+
+summary_mat <- data.frame(d)
+rownames(summary_mat) <-  colnames(data_set)
+colnames(summary_mat) = c("unique",'zero','star','NULL','NA','NAN')
+
 
 
