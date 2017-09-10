@@ -1,0 +1,174 @@
+
+## data 생성#######
+data_set = read.csv('/home/snu/Bigcontest/challenge_data/Data_set.csv',fileEncoding='euc-kr',stringsAsFactors = TRUE)
+
+######################################################################
+# ratio_LNIF는 전체 금액을 전체 건수로 나눈 비율
+data_set$ratio_LNIF =data_set$TOT_LNIF_AMT/(data_set$BNK_LNIF_CNT+data_set$CPT_LNIF_CNT+data_set$SPART_LNIF_CNT+data_set$ECT_LNIF_CNT)
+data_set$ratio_LNIF = ifelse(is.infinite(data_set$ratio_LNIF),997001,data_set$ratio_LNIF)
+######################################################################
+plot(table(data_set$ratio_LNIF))
+
+######################################################################
+# ratio_CLIF_d_LNIF
+data_set$ratio_CLIF_d_LNIF =data_set$TOT_CLIF_AMT/data_set$TOT_LNIF_AMT
+######################################################################
+
+######################################################################
+# ratio_BNK_d_LNIF
+data_set$ratio_BNK_d_LNIF =data_set$BNK_LNIF_AMT/data_set$TOT_LNIF_AMT
+######################################################################
+
+######################################################################
+# ratio_CPT_d_LNIF
+data_set$ratio_CPT_d_LNIF =data_set$CPT_LNIF_AMT/data_set$TOT_LNIF_AMT
+######################################################################
+
+######################################################################
+# ratio_BNK_d_N
+data_set$ratio_BNK_d_N =data_set$BNK_LNIF_AMT/data_set$BNK_LNIF_CNT
+data_set$ratio_BNK_d_N = ifelse(is.nan(data_set$ratio_BNK_d_N),0,data_set$ratio_BNK_d_N)
+######################################################################
+
+######################################################################
+# ratio_CPT_d_N
+data_set$ratio_CPT_d_N =data_set$CPT_LNIF_AMT/data_set$CPT_LNIF_CNT
+data_set$ratio_CPT_d_N <- ifelse(is.nan(data_set$ratio_CPT_d_N),0,data_set$ratio_CPT_d_N)
+######################################################################
+
+######################################################################
+# 제1 제2금융권 제외
+data_set$except_BNK_CPT <- ifelse((data_set$SPART_LNIF_CNT+data_set$ECT_LNIF_CNT)!=0,1,0)
+table(data_set$TARGET,data_set$except_BNK_CPT)
+prop.table(table(data_set$TARGET,data_set$except_BNK_CPT),2)
+######################################################################
+
+######################################################################
+# 전체 대출 횟수
+data_set$all_loan <- data_set$BNK_LNIF_CNT+data_set$CPT_LNIF_CNT+data_set$SPART_LNIF_CNT+data_set$ECT_LNIF_CNT
+######################################################################
+
+######################################################################
+# 은행대출 / 전체 대출 횟수
+data_set$BNK_d_all_loan <- data_set$BNK_LNIF_CNT/data_set$all_loan
+data_set$BNK_d_all_loan <- ifelse(is.nan(data_set$BNK_d_all_loan),0,data_set$BNK_d_all_loan)
+######################################################################
+
+######################################################################
+# 카드사/할부사/캐피탈 / 전체 대출 횟수
+data_set$CPT_d_all_loan <- data_set$CPT_LNIF_CNT/data_set$all_loan
+data_set$CPT_d_all_loan <- ifelse(is.nan(data_set$CPT_d_all_loan),0,data_set$CPT_d_all_loan)
+prop.table(table(data_set$TARGET,data_set$CPT_d_all_loan+data_set$BNK_d_all_loan<1),1)
+######################################################################
+
+######################################################################
+# [2산업분류]/ 전체 대출 횟수
+data_set$SPART_d_all_loan <- data_set$SPART_LNIF_CNT/data_set$all_loan
+data_set$SPART_d_all_loan <- ifelse(is.nan(data_set$SPART_d_all_loan),0,data_set$SPART_d_all_loan)
+prop.table(table(data_set$TARGET,data_set$SPART_d_all_loan>0.5),1)
+######################################################################
+
+######################################################################
+# 은행, 카드사/할부사/캐피탈 제외 대출금액
+data_set$except_loan <-data_set$TOT_LNIF_AMT-data_set$BNK_LNIF_AMT-data_set$CPT_LNIF_AMT
+table(data_set$except_loan)
+data_set$except_loan <- ifelse(data_set$except_loan<0,0,data_set$except_loan)
+prop.table(table(data_set$TARGET,data_set$except_loan==0),1)
+######################################################################
+
+
+######################################################################
+# ETC_d_all_loan
+data_set$ETC_d_all_loan <- data_set$ECT_LNIF_CNT/ data_set$all_loan
+######################################################################
+
+######################################################################
+# loan_type
+data_set$loan_type <- data_set$ratio_BNK_d_LNIF
+data_set$loan_type[which(data_set$ratio_BNK_d_LNIF>0.5 &  data_set$ratio_BNK_d_LNIF!=1)] <- 2
+data_set$loan_type[(data_set$ratio_BNK_d_LNIF<=0.5 & data_set$ratio_BNK_d_LNIF!=0)] <- 3
+######################################################################
+
+######################################################################
+# ratio_except_loan_d_LNIF
+data_set$ratio_except_loan_d_LNIF <- data_set$except_loan / data_set$TOT_LNIF_AMT
+######################################################################
+
+######################################################################
+# per_income
+data_set$perincome <- data_set$HSHD_INFR_INCM/data_set$ACTL_FMLY_NUM
+######################################################################
+
+######################################################################
+#log_TOT_LNIF_AMT
+data_set$log_TOT_LNIF_AMT <- log(data_set$TOT_LNIF_AMT)
+######################################################################
+
+######################################################################
+# SPART_LNIF_CNT_pow
+data_set$SPART_LNIF_CNT_pow <- data_set$SPART_LNIF_CNT **2
+######################################################################
+
+######################################################################
+# ECT_LNIF_CNT_pow
+data_set$ECT_LNIF_CNT_pow <- data_set$ECT_LNIF_CNT**2
+######################################################################
+
+######################################################################
+# CRDT_CARD_CNT_pow
+data_set$CRDT_CARD_CNT_pow <- data_set$CRDT_CARD_CNT**2
+######################################################################
+
+######################################################################
+# ratio_CNT_d_AMT
+data_set$ratio_CNT_d_AMT <- data_set$all_loan / data_set$TOT_LNIF_AMT
+
+
+##########33
+#factor#
+data_set$BNK_LNIF_CNT <-  as.factor(data_set$BNK_LNIF_CNT)
+data_set$CPT_LNIF_CNT <-  as.factor(data_set$CPT_LNIF_CNT)
+data_set$SPART_LNIF_CNT <-  as.factor(data_set$SPART_LNIF_CNT)
+data_set$ECT_LNIF_CNT <- as.factor(data_set$ECT_LNIF_CNT)
+data_set$OCCP_NAME_G <-  as.factor(data_set$OCCP_NAME_G)
+data_set$AGE <-  as.factor(data_set$AGE)
+data_set$SEX <- as.factor(data_set$SEX)
+data_set$CBPT_MBSP_YN <-  as.factor(data_set$CBPT_MBSP_YN)
+data_set$TLFE_UNPD_CNT <- as.factor(data_set$TLFE_UNPD_CNT)
+data_set$PAYM_METD <-  as.factor(data_set$PAYM_METD)
+data_set$LINE_STUS <-  as.factor(data_set$LINE_STUS)
+data_set$except_BNK_CPT <-  as.factor(data_set$except_BNK_CPT)
+data_set$loan_type <-  as.factor(data_set$loan_type)
+
+
+summary_mat <- c()
+d <- c()
+for(i in 1:length(colnames(data_set))){
+  a <- length(unique(data_set[,i]))
+  e <- sum(data_set[,i]==0)
+  g <- sum(data_set[,i]=='*')
+  f <- sum(data_set[,i]=='NULL')
+  k <- sum(data_set[,i]=='NA')
+  l <- sum(data_set[,i]=='NAN')
+  c <- c(a,e,g,f,k,l)
+  
+  if(length(d)==0){
+    d <- c
+  }else{
+    d <- rbind(d,c)
+  }
+}
+
+summary_mat <- data.frame(d)
+rownames(summary_mat) <-  colnames(data_set)
+colnames(summary_mat) = c("unique",'zero','star','NULL','NA','NAN')
+
+
+logistic_data <- data_set[,-1]
+intrain<-createDataPartition(y=logistic_data$TARGET, p=0.7, list=FALSE) 
+
+train_data <- logistic_data[intrain,]
+test_data <- logistic_data[-intrain,]
+
+
+
