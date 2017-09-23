@@ -122,3 +122,78 @@ data_set$CRDT_CARD_CNT_pow <- data_set$CRDT_CARD_CNT**2
 ######################################################################
 # ratio_CNT_d_AMT
 data_set$ratio_CNT_d_AMT <- data_set$all_loan / data_set$TOT_LNIF_AMT
+
+######## modeling ############
+library(caret)
+library(rpart)
+library(ranger)
+library(foreach)
+library(data.table)  #data loading
+library(ggplot2)     #data EDA
+library(gbm)
+library(unbalanced)
+
+set.seed(12233)
+
+
+
+intrain<-createDataPartition(y=data_set$TARGET, p=0.7, list=FALSE) 
+#data_set$TARGET<-as.factor(data_set$TARGET)
+train<-data_set[intrain,-c(1)]
+valid<-data_set[-intrain,-c(1)]
+#train<-data_set[intrain,]
+#valid<-data_set[-intrain,]
+
+
+
+gbm_train=gbm(TARGET~.,data=train,distribution = "bernoulli",n.trees=350,shrinkage = 0.05,interaction.depth = 10,verbose = T)
+n.tree=gbm.perf(gbm_train,method="OOB")
+n.tree
+gbm.pred=predict(gbm_train,valid,n.trees=350,num.threads=2)
+
+outcome=data.frame()
+for (i in c(1:100)) {
+  gbm_boolean=ifelse(gbm.pred>2.5-i/20,0,1)
+  actual_target=1-as.numeric(valid$TARGET)
+  gbm_confus<-confusionMatrix(actual_target,gbm_boolean)
+  res=data.frame(cut.off=2.5-i/20,Pre=gbm_confus$byClass[5],Rec=gbm_confus$byClass[6],F1=gbm_confus$byClass[7])
+  outcome=rbind(outcome,res)
+}
+outcome
+
+
+summary(gbm_train)
+
+
+
+#######################################3
+
+a <- summary.gbm(gbm_train)
+b <-as.character(a$var[-which(a$rel.inf<0.2)])
+b <- c("TARGET",b)
+train_data <- data_set[,which(colnames(data_set) %in% b)]
+
+intrain<-createDataPartition(y=train_data$TARGET, p=0.7, list=FALSE) 
+#train_data$TARGET<-as.factor(train_data$TARGET)
+train<-train_data[intrain,]
+valid<-train_data[-intrain,]
+#train<-train_data[intrain,]
+#valid<-data_set[-intrain,]
+
+
+
+gbm_train=gbm(TARGET~.,data=train,distribution = "bernoulli",n.trees=350,shrinkage = 0.05,interaction.depth = 10,verbose = T)
+n.tree=gbm.perf(gbm_train,method="OOB")
+n.tree
+gbm.pred=predict(gbm_train,valid,n.trees=350,num.threads=2)
+
+outcome=data.frame()
+for (i in c(1:100)) {
+  gbm_boolean=ifelse(gbm.pred>2.5-i/20,0,1)
+  actual_target=1-as.numeric(valid$TARGET)
+  gbm_confus<-confusionMatrix(actual_target,gbm_boolean)
+  res=data.frame(cut.off=2.5-i/20,Pre=gbm_confus$byClass[5],Rec=gbm_confus$byClass[6],F1=gbm_confus$byClass[7])
+  outcome=rbind(outcome,res)
+}
+
+
